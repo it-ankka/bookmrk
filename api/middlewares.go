@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
@@ -12,7 +13,6 @@ import (
 // LoadAuthContext middleware reads the pb_auth cookie
 // and loads the token related record or admin instance into the
 // request's context.
-
 func LoadAuthContextFromCookie(app core.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -49,5 +49,17 @@ func LoadAuthContextFromCookie(app core.App) echo.MiddlewareFunc {
 
 			return next(c)
 		}
+	}
+}
+
+func RequireAuth(app core.App) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return LoadAuthContextFromCookie(app)(func(c echo.Context) error {
+			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+			if record == nil {
+				return c.Redirect(303, "/login")
+			}
+			return next(c)
+		})
 	}
 }
