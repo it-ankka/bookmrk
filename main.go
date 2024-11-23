@@ -70,7 +70,6 @@ func main() {
 		e.Router.GET("/bookmarks", func(c echo.Context) error {
 			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 			bookmarks, err := app.Dao().FindRecordsByFilter("bookmarks", "user.id = {:user_id}", "-created", -1, 0, dbx.Params{"user_id": record.Id})
-			fmt.Printf("%+v\n", bookmarks[len(bookmarks)-1])
 			if err != nil {
 				println(err.Error())
 			}
