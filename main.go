@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/it-ankka/bookmrk/api"
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -45,19 +47,62 @@ func main() {
 
 		e.Router.Static("/static", "./static")
 
-		// registes a new "GET /*" handler
+		// -- 404 PAGE --
 		e.Router.GET("/*", func(c echo.Context) error {
 			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-			if record == nil {
-				return c.Redirect(303, "/login")
+
+			html, _ := registry.LoadFiles(
+				"views/layout.html",
+				"views/404.html",
+			).Render(map[string]any{
+				"name":          record.Username(),
+				"authenticated": true,
+			})
+			return c.HTML(404, html)
+		}, apis.ActivityLogger(app), api.RequireAuth(app))
+
+		// Root page redirects to bookmarks page
+		e.Router.GET("/", func(c echo.Context) error {
+			return c.Redirect(303, "/bookmarks")
+		}, apis.ActivityLogger(app), api.RequireAuth(app))
+
+		// -- BOOKMARKS PAGE --
+		e.Router.GET("/bookmarks", func(c echo.Context) error {
+			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+			bookmarks, err := app.Dao().FindRecordsByFilter("bookmarks", "user.id = {:user_id}", "-created", -1, 0, dbx.Params{"user_id": record.Id})
+			fmt.Printf("%+v\n", bookmarks[len(bookmarks)-1])
+			if err != nil {
+				println(err.Error())
 			}
+			html, err := registry.LoadFiles(
+				"views/layout.html",
+				"views/navbar.html",
+				"views/bookmarks.html",
+				"views/bookmark.html",
+			).Render(map[string]any{
+				"username":      record.Username(),
+				"authenticated": true,
+				"bookmarks":     bookmarks,
+			})
+
+			if err != nil {
+				println(err.Error())
+				return apis.NewNotFoundError("", err)
+			}
+
+			return c.HTML(200, html)
+		}, apis.ActivityLogger(app), api.RequireAuth(app))
+
+		// -- TAGS PAGE --
+		e.Router.GET("/tags", func(c echo.Context) error {
+			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 
 			html, err := registry.LoadFiles(
 				"views/layout.html",
 				"views/navbar.html",
-				"views/default.html",
+				"views/main.html",
 			).Render(map[string]any{
-				"name":          record.Username(),
+				"username":      record.Username(),
 				"authenticated": true,
 			})
 
@@ -65,11 +110,10 @@ func main() {
 				return apis.NewNotFoundError("", err)
 			}
 
-			// TODO Check why is it not authenticating properly?
 			return c.HTML(200, html)
-			// return c.NoContent(http.StatusNoContent)
-		}, apis.ActivityLogger(app), api.LoadAuthContextFromCookie(app))
+		}, apis.ActivityLogger(app), api.RequireAuth(app))
 
+		// -- LOGIN PAGE --
 		e.Router.GET("/login", func(c echo.Context) error {
 			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 			if record != nil {
@@ -94,6 +138,7 @@ func main() {
 			return c.HTML(200, html)
 		}, apis.ActivityLogger(app), api.LoadAuthContextFromCookie(app))
 
+		// -- LOGIN HANDLER --
 		e.Router.POST("/login", func(c echo.Context) error {
 			data := &struct {
 				Email    string `form:"email" json:"email"`
@@ -147,6 +192,7 @@ func main() {
 			return c.Redirect(303, "/")
 		}, apis.ActivityLogger(app))
 
+		// -- LOGOUT HANDLER --
 		e.Router.POST("/logout", func(c echo.Context) error {
 			// Clear auth cookie
 			c.SetCookie(&http.Cookie{

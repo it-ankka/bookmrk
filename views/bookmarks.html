@@ -1,0 +1,21 @@
+{{define "title"}} Bookmarks {{end}} 
+
+{{define "body"}}
+<div class="max-w-4xl p-4 m-auto">
+  <div class="flex w-full py-4 justify-between">
+    <div class="text-2xl w-full">Bookmarks</div>
+    <a href="/bookmarks/add" class="border px-4 py-2 transition hover:bg-gray-300 active:bg-gray-500 rounded-xl">
+      Add
+    </a>
+  </div>
+    {{ if .bookmarks }}
+      <div class="grid grid-cols-3 w-full">
+        {{ range .bookmarks }}
+          {{ block "bookmark" .PublicExport }}Bookmarks{{end}}
+        {{ end }}
+      </div>
+    {{ else }}
+      <div class=" text-center">No bookmarks</div>
+    {{ end }}
+</div>
+{{end}}
