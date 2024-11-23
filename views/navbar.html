@@ -1,0 +1,22 @@
+{{define "navbar"}}
+  <nav class="w-screen min-h-16 static top-0 shadow-lg px-8 content-center">
+    <div class="flex justify-between">
+      <ul class="flex items-center">
+        <li> 
+          <span class="text-lg font-bold">Bookmrk</span>
+        </li>
+      </ul>
+      <ul class="h-fit flex items-center">
+        {{if .authenticated}}
+          <li>
+            <form method="POST" action="/logout" >
+              <button type="submit" class="border px-4 py-2 transition hover:bg-gray-300 active:bg-gray-500 rounded-xl">
+                Log out
+              </button>
+            </form>
+          </li>
+        {{end}}
+      </ul>
+    </div>
+  </nav>
+{{end}}

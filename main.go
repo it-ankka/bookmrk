@@ -54,9 +54,11 @@ func main() {
 
 			html, err := registry.LoadFiles(
 				"views/layout.html",
+				"views/navbar.html",
 				"views/default.html",
 			).Render(map[string]any{
-				"name": record.Username(),
+				"name":          record.Username(),
+				"authenticated": true,
 			})
 
 			if err != nil {
@@ -69,6 +71,10 @@ func main() {
 		}, apis.ActivityLogger(app), api.LoadAuthContextFromCookie(app))
 
 		e.Router.GET("/login", func(c echo.Context) error {
+			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+			if record != nil {
+				return c.Redirect(303, "/")
+			}
 
 			html, err := registry.LoadFiles(
 				"views/layout.html",
@@ -88,8 +94,7 @@ func main() {
 			return c.HTML(200, html)
 		}, apis.ActivityLogger(app), api.LoadAuthContextFromCookie(app))
 
-		// registes a new "POST /auth" handler
-		e.Router.POST("/auth", func(c echo.Context) error {
+		e.Router.POST("/login", func(c echo.Context) error {
 			data := &struct {
 				Email    string `form:"email" json:"email"`
 				Password string `form:"password" json:"password"`
@@ -141,6 +146,22 @@ func main() {
 			}
 			return c.Redirect(303, "/")
 		}, apis.ActivityLogger(app))
+
+		e.Router.POST("/logout", func(c echo.Context) error {
+			// Clear auth cookie
+			c.SetCookie(&http.Cookie{
+				Name:     "pb_auth",
+				Value:    "",
+				Secure:   true,
+				HttpOnly: true,
+				SameSite: http.SameSiteStrictMode,
+				MaxAge:   -1,
+				Expires:  time.Unix(0, 0),
+			})
+
+			return c.Redirect(303, "/login")
+		}, apis.ActivityLogger(app))
+
 		return nil
 	})
 
