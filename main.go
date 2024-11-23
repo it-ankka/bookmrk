@@ -2,9 +2,9 @@ package main
 
 import (
 	"embed"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -14,40 +14,78 @@ import (
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tokens"
+	"github.com/pocketbase/pocketbase/tools/template"
+
+	_ "github.com/it-ankka/bookmrk/migrations"
 )
 
 // content holds our static web server content.
-//
-//go:embed pb_public/*
-var content embed.FS
 
-var loginFormHtml = `<form action="/auth" method="POST" style="display: flex; flex-direction: column; gap: 8px; max-width: max-content;"> 
-	<input name="email" type="email" placeholder="email" required/>
-	<input name="password" type="password" placeholder="password" required/>
-	<button type="submit">Log in</button>
-</form>`
+//go:embed views static migrations
+var content embed.FS
 
 func main() {
 	app := pocketbase.New()
 
+	// loosely check if it was executed using "go run"
+	isGoRun := strings.HasPrefix(os.Args[0], os.TempDir())
+
+	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
+		// enable auto creation of migration files when making collection changes in the Admin UI
+		// (the isGoRun check is to enable it only during development)
+		Automigrate: isGoRun,
+	})
+
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+		// this is safe to be used by multiple goroutines
+		// (it acts as store for the parsed templates)
+		registry := template.NewRegistry()
+
+		e.Router.Static("/static", "./static")
+
 		// registes a new "GET /*" handler
 		e.Router.GET("/*", func(c echo.Context) error {
 			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 			if record == nil {
 				return c.Redirect(303, "/login")
 			}
+
+			html, err := registry.LoadFiles(
+				"views/layout.html",
+				"views/default.html",
+			).Render(map[string]any{
+				"name": record.Username(),
+			})
+
+			if err != nil {
+				return apis.NewNotFoundError("", err)
+			}
+
 			// TODO Check why is it not authenticating properly?
-			return c.HTML(200, "<h1>YOU ARE NOW LOGGED IN "+record.Username()+"</h1>")
+			return c.HTML(200, html)
 			// return c.NoContent(http.StatusNoContent)
 		}, apis.ActivityLogger(app), api.LoadAuthContextFromCookie(app))
 
 		e.Router.GET("/login", func(c echo.Context) error {
-			if c.QueryParam("error") != "" {
-				return c.HTML(400, fmt.Sprintf(loginFormHtml+`<strong style="color: red">%s</strong>`, c.QueryParam("error")))
+
+			html, err := registry.LoadFiles(
+				"views/layout.html",
+				"views/login.html",
+			).Render(map[string]any{
+				"error": c.QueryParam("error"),
+			})
+
+			if err != nil {
+				return apis.NewNotFoundError("", err)
 			}
-			return c.HTML(200, loginFormHtml)
+
+			if c.QueryParam("error") != "" {
+				return c.HTML(400, html)
+			}
+
+			return c.HTML(200, html)
 		}, apis.ActivityLogger(app), api.LoadAuthContextFromCookie(app))
 
 		// registes a new "POST /auth" handler
@@ -64,7 +102,7 @@ func main() {
 				if strings.EqualFold(contentType, "Application/json") {
 					return apis.NewBadRequestError("Failed to read request data", err)
 				}
-				return c.Redirect(303, "/login?error=Invalid login credentials")
+				return c.Redirect(303, "/login?error=1")
 			}
 
 			// fetch the user and check the provided password
@@ -73,7 +111,7 @@ func main() {
 				if strings.EqualFold(contentType, "Application/json") {
 					return apis.NewBadRequestError("Invalid login credentials", err)
 				}
-				return c.Redirect(303, "/login?error=Invalid login credentials")
+				return c.Redirect(303, "/login?error=1")
 			}
 
 			// generate a new auth token for the found user record
@@ -82,7 +120,7 @@ func main() {
 				if strings.EqualFold(contentType, "Application/json") {
 					return apis.NewBadRequestError("Failed to create auth token", err)
 				}
-				return c.Redirect(303, "/login?error=Invalid login credentials")
+				return c.Redirect(303, "/login?error=1")
 			}
 
 			// set it as cookie

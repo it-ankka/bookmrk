@@ -1,0 +1,34 @@
+{{define "title"}} Login {{end}} 
+{{define "body"}}
+  <div class="h-screen w-screen content-center">
+    <form
+      class="m-auto flex h-max w-full max-w-sm flex-col gap-4 rounded-xl border-2 p-4 shadow-lg"
+      action="/auth"
+      method="POST"
+    >
+      <div class="w-full text-center text-xl">Log in</div>
+      <div class="flex flex-col gap-2">
+        <input
+          name="email"
+          type="email"
+          placeholder="email"
+          required
+          class="border-b p-2"
+        />
+        <input
+          name="password"
+          type="password"
+          placeholder="password"
+          required
+          class="border-b p-2"
+        />
+      </div>
+      <button type="submit" class="border p-2 transition hover:bg-gray-300 active:bg-gray-500 rounded-xl">
+        Log in
+      </button>
+      {{if .error}}
+        <div class="text-red-500 font-bold text-center">Invalid login credentials</div>
+      {{ end }}
+    </form>
+  </div>
+{{end}}
