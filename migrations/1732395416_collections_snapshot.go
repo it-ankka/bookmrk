@@ -13,108 +13,26 @@ func init() {
 	m.Register(func(db dbx.Builder) error {
 		jsonData := `[
 			{
-				"id": "_pb_users_auth_",
-				"created": "2024-11-20 18:00:17.871Z",
-				"updated": "2024-11-20 18:16:25.781Z",
-				"name": "users",
-				"type": "auth",
-				"system": false,
-				"schema": [
-					{
-						"system": false,
-						"id": "users_name",
-						"name": "name",
-						"type": "text",
-						"required": false,
-						"presentable": false,
-						"unique": false,
-						"options": {
-							"min": null,
-							"max": null,
-							"pattern": ""
-						}
-					},
-					{
-						"system": false,
-						"id": "users_avatar",
-						"name": "avatar",
-						"type": "file",
-						"required": false,
-						"presentable": false,
-						"unique": false,
-						"options": {
-							"mimeTypes": [
-								"image/jpeg",
-								"image/png",
-								"image/svg+xml",
-								"image/gif",
-								"image/webp"
-							],
-							"thumbs": null,
-							"maxSelect": 1,
-							"maxSize": 5242880,
-							"protected": false
-						}
-					},
-					{
-						"system": false,
-						"id": "xolbud0n",
-						"name": "bookmarks",
-						"type": "relation",
-						"required": false,
-						"presentable": false,
-						"unique": false,
-						"options": {
-							"collectionId": "r46wuuwnllboa9m",
-							"cascadeDelete": false,
-							"minSelect": null,
-							"maxSelect": null,
-							"displayFields": null
-						}
-					},
-					{
-						"system": false,
-						"id": "cwbs2kky",
-						"name": "tags",
-						"type": "relation",
-						"required": false,
-						"presentable": false,
-						"unique": false,
-						"options": {
-							"collectionId": "c0x0ngay68c3wjc",
-							"cascadeDelete": false,
-							"minSelect": null,
-							"maxSelect": null,
-							"displayFields": null
-						}
-					}
-				],
-				"indexes": [],
-				"listRule": "id = @request.auth.id",
-				"viewRule": "id = @request.auth.id",
-				"createRule": "",
-				"updateRule": "id = @request.auth.id",
-				"deleteRule": "id = @request.auth.id",
-				"options": {
-					"allowEmailAuth": true,
-					"allowOAuth2Auth": true,
-					"allowUsernameAuth": true,
-					"exceptEmailDomains": null,
-					"manageRule": null,
-					"minPasswordLength": 8,
-					"onlyEmailDomains": null,
-					"onlyVerified": false,
-					"requireEmail": false
-				}
-			},
-			{
 				"id": "r46wuuwnllboa9m",
 				"created": "2024-11-20 18:08:07.175Z",
-				"updated": "2024-11-20 18:41:59.960Z",
+				"updated": "2024-11-23 20:53:19.718Z",
 				"name": "bookmarks",
 				"type": "base",
 				"system": false,
 				"schema": [
+					{
+						"system": false,
+						"id": "l7hw26k7",
+						"name": "url",
+						"type": "url",
+						"required": true,
+						"presentable": true,
+						"unique": false,
+						"options": {
+							"exceptDomains": [],
+							"onlyDomains": []
+						}
+					},
 					{
 						"system": false,
 						"id": "wieyqovr",
@@ -131,15 +49,16 @@ func init() {
 					},
 					{
 						"system": false,
-						"id": "l7hw26k7",
-						"name": "url",
-						"type": "url",
-						"required": true,
+						"id": "y8okejxc",
+						"name": "description",
+						"type": "text",
+						"required": false,
 						"presentable": true,
 						"unique": false,
 						"options": {
-							"exceptDomains": [],
-							"onlyDomains": []
+							"min": null,
+							"max": null,
+							"pattern": ""
 						}
 					},
 					{
@@ -263,6 +182,101 @@ func init() {
 				"updateRule": "@request.auth.id != \"\" && user = @request.auth.id ",
 				"deleteRule": "@request.auth.id != \"\" && user = @request.auth.id ",
 				"options": {}
+			},
+			{
+				"id": "_pb_users_auth_",
+				"created": "2024-11-23 20:52:12.486Z",
+				"updated": "2024-11-23 20:52:12.492Z",
+				"name": "users",
+				"type": "auth",
+				"system": false,
+				"schema": [
+					{
+						"system": false,
+						"id": "users_name",
+						"name": "name",
+						"type": "text",
+						"required": false,
+						"presentable": false,
+						"unique": false,
+						"options": {
+							"min": null,
+							"max": null,
+							"pattern": ""
+						}
+					},
+					{
+						"system": false,
+						"id": "users_avatar",
+						"name": "avatar",
+						"type": "file",
+						"required": false,
+						"presentable": false,
+						"unique": false,
+						"options": {
+							"mimeTypes": [
+								"image/jpeg",
+								"image/png",
+								"image/svg+xml",
+								"image/gif",
+								"image/webp"
+							],
+							"thumbs": null,
+							"maxSelect": 1,
+							"maxSize": 5242880,
+							"protected": false
+						}
+					},
+					{
+						"system": false,
+						"id": "xolbud0n",
+						"name": "bookmarks",
+						"type": "relation",
+						"required": false,
+						"presentable": false,
+						"unique": false,
+						"options": {
+							"collectionId": "r46wuuwnllboa9m",
+							"cascadeDelete": false,
+							"minSelect": null,
+							"maxSelect": null,
+							"displayFields": null
+						}
+					},
+					{
+						"system": false,
+						"id": "cwbs2kky",
+						"name": "tags",
+						"type": "relation",
+						"required": false,
+						"presentable": false,
+						"unique": false,
+						"options": {
+							"collectionId": "c0x0ngay68c3wjc",
+							"cascadeDelete": false,
+							"minSelect": null,
+							"maxSelect": null,
+							"displayFields": null
+						}
+					}
+				],
+				"indexes": [],
+				"listRule": "id = @request.auth.id",
+				"viewRule": "id = @request.auth.id",
+				"createRule": "",
+				"updateRule": "id = @request.auth.id",
+				"deleteRule": "id = @request.auth.id",
+				"options": {
+					"allowEmailAuth": true,
+					"allowOAuth2Auth": true,
+					"allowUsernameAuth": true,
+					"exceptEmailDomains": null,
+					"manageRule": null,
+					"minPasswordLength": 8,
+					"onlyEmailDomains": null,
+					"onlyVerified": false,
+					"requireEmail": false
+				}
 			}
 		]`
 
