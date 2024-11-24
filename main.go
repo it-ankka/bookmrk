@@ -68,10 +68,29 @@ func main() {
 		// -- BOOKMARKS PAGE --
 		e.Router.GET("/bookmarks", func(c echo.Context) error {
 			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+			q := c.QueryParam("q")
 			bookmarks, err := app.Dao().FindRecordsByFilter("bookmarks", "user.id = {:user_id}", "-created", -1, 0, dbx.Params{"user_id": record.Id})
+
 			if err != nil {
 				println(err.Error())
 			}
+
+			matchingBookmarks := []*models.Record{}
+
+			if len(q) > 0 {
+				for _, bookmark := range bookmarks {
+					bm := bookmark.PublicExport()
+					fields := []string{"url", "name", "description"}
+					for _, field := range fields {
+						if strings.Contains(bm[field].(string), q) {
+							matchingBookmarks = append(matchingBookmarks, bookmark)
+						}
+					}
+				}
+			} else {
+				matchingBookmarks = bookmarks
+			}
+
 			html, err := registry.LoadFiles(
 				"views/layout.html",
 				"views/navbar.html",
@@ -80,7 +99,8 @@ func main() {
 			).Render(map[string]any{
 				"username":      record.Username(),
 				"authenticated": true,
-				"bookmarks":     bookmarks,
+				"bookmarks":     matchingBookmarks,
+				"query":         q,
 			})
 
 			if err != nil {

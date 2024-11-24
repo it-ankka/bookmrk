@@ -5,7 +5,12 @@
       <div class="flex w-full flex-col justify-between gap-2 md:flex-row">
         <div class="w-full text-2xl">Bookmarks</div>
         <form method="GET" class="flex gap-2">
-          <input name="q" class="flex-1 border-b p-2" placeholder="Search" />
+          <input
+            name="q"
+            class="flex-1 border-b p-2"
+            placeholder="Search"
+            value="{{ .query }}"
+          />
           <button
             type="submit"
             class="rounded-xl border px-4 py-2 transition hover:bg-gray-300 active:bg-gray-500"
