@@ -1,15 +1,17 @@
 {{ define "bookmark" }}
   <a
-    class="rounded-xl p-4 shadow transition hover:bg-gray-300 active:bg-gray-500"
+    class="flex min-h-28 flex-col gap-2 rounded-xl p-4 shadow transition hover:bg-gray-300 active:bg-gray-500 sm:aspect-video"
     href="{{ .url }}"
   >
-    <div class="text-xl font-semibold">
+    <div
+      class="overflow-hidden overflow-ellipsis text-xl font-semibold underline"
+    >
       {{ if .name }}
         {{ .name }}
       {{ else }}
         {{ .url }}
       {{ end }}
     </div>
-    <div class="text-gray-700">{{ .description }}</div>
+    <div class="overflow-ellipsis text-gray-700">{{ .description }}</div>
   </a>
 {{ end }}
