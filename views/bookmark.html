@@ -1,7 +1,15 @@
 {{ define "bookmark" }}
-  <div>
-    <div> {{ .url }} </div>
-    <div> {{ .name }} </div>
-    <div> {{ .description }} </div>
-  </div>
+  <a
+    class="rounded-xl p-4 shadow transition hover:bg-gray-300 active:bg-gray-500"
+    href="{{ .url }}"
+  >
+    <div class="text-xl font-semibold">
+      {{ if .name }}
+        {{ .name }}
+      {{ else }}
+        {{ .url }}
+      {{ end }}
+    </div>
+    <div class="text-gray-700">{{ .description }}</div>
+  </a>
 {{ end }}

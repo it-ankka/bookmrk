@@ -1,13 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="/static/css/tailwind.css" rel="stylesheet">
-    <title>{{block "title" .}} Bookmrk {{end}}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/static/css/tailwind.css" rel="stylesheet" />
+    <title>{{ block "title" . }}Bookmrk{{ end }}</title>
   </head>
   <body>
-    {{block "navbar" .}}{{end}}
-    {{block "body" .}} Default page body {{end}}
+    {{ block "navbar" . }}{{ end }}
+    {{ block "body" . }}
+      Default page body
+    {{ end }}
   </body>
 </html>

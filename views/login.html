@@ -1,5 +1,5 @@
-{{define "title"}} Login {{end}} 
-{{define "body"}}
+{{ define "title" }}Login{{ end }}
+{{ define "body" }}
   <div class="h-screen w-screen content-center p-2">
     <form
       class="m-auto flex h-max w-full max-w-sm flex-col gap-4 rounded-xl border-2 p-4 shadow-lg"
@@ -22,14 +22,17 @@
           class="border-b p-2"
         />
       </div>
-      <button type="submit" class="border px-4 py-2 transition hover:bg-gray-300 active:bg-gray-500 rounded-xl">
+      <button
+        type="submit"
+        class="rounded-xl border px-4 py-2 transition hover:bg-gray-300 active:bg-gray-500"
+      >
         Log in
       </button>
-      {{if .error}}
-        <div class="text-red-500 font-bold text-center">
+      {{ if .error }}
+        <div class="text-center font-bold text-red-500">
           Invalid login credentials
         </div>
       {{ end }}
     </form>
   </div>
-{{end}}
+{{ end }}
