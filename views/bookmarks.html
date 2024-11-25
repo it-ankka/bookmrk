@@ -11,20 +11,53 @@
             placeholder="Search"
             value="{{ .query }}"
           />
-          <button
-            type="submit"
-            class="rounded-xl border px-4 py-2 transition hover:bg-gray-300 active:bg-gray-500"
-          >
-            Search
-          </button>
+          <button type="submit" class="btn-secondary">Search</button>
         </form>
       </div>
-      <a
-        href="/bookmarks/add"
-        class="w-full rounded-xl border px-4 py-4 text-center transition hover:bg-gray-300 active:bg-gray-500 md:w-fit"
+      <button
+        class="w-full rounded-xl border p-4 text-center transition hover:bg-gray-300 active:bg-gray-500 md:w-fit"
+        onclick="document.getElementById('create-dialog').showModal()"
       >
         New bookmark
-      </a>
+      </button>
+      <dialog
+        id="create-dialog"
+        class="w-full max-w-md rounded-xl p-4 shadow"
+        onmousedown="event.target==this && this.close()"
+      >
+        <form method="POST" class="flex flex-col items-stretch gap-6">
+          <div class="text-2xl">Create a new bookmark</div>
+          <div class="flex flex-col items-stretch gap-4">
+            <input
+              type="url"
+              name="url"
+              placeholder="Url"
+              class="border-b p-2"
+            />
+            <input
+              type="text"
+              name="name"
+              placeholder="name"
+              class="border-b p-2"
+            />
+            <textarea
+              placeholder="description"
+              name="description"
+              rows="3"
+              class="border-b p-2"
+            ></textarea>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button formmethod="dialog" class="btn-secondary w-full p-4">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary w-full p-4">Create</button>
+          </div>
+        </form>
+      </dialog>
+      <script>
+        document.getElementById("create-dialog").showModal();
+      </script>
     </div>
     {{ if .bookmarks }}
       <div

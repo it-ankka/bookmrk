@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "tailwind:build": "tailwindcss -o ./static/css/tailwind.css",
-    "tailwind:watch": "tailwindcss -o ./static/css/tailwind.css --watch"
+    "tailwind:build": "tailwindcss -i ./ui/input.css -o ./static/css/tailwind.css",
+    "tailwind:watch": "tailwindcss -i ./ui/input.css -o ./static/css/tailwind.css --watch"
   },
   "devDependencies": {
     "@fsouza/prettierd": "^0.25.4",
