@@ -3,27 +3,23 @@ package main
 import (
 	"embed"
 	"log"
-	"net/http"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/it-ankka/bookmrk/api"
+	"github.com/it-ankka/bookmrk/api/handlers"
+	"github.com/it-ankka/bookmrk/api/middlewares"
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
-	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/template"
 
 	_ "github.com/it-ankka/bookmrk/migrations"
 )
 
 // content holds our static web server content.
-
+//
 //go:embed views static migrations
 var content embed.FS
 
@@ -46,250 +42,43 @@ func main() {
 
 		e.Router.Static("/static", "./static")
 
-		// -- 404 PAGE --
-		e.Router.GET("/*", func(c echo.Context) error {
-			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-
-			html, _ := registry.LoadFiles(
-				"views/layout.html",
-				"views/404.html",
-			).Render(map[string]any{
-				"name":          record.Username(),
-				"authenticated": true,
-			})
-			return c.HTML(404, html)
-		}, apis.ActivityLogger(app), api.RequireAuth(app))
-
 		// Root page redirects to bookmarks page
 		e.Router.GET("/", func(c echo.Context) error {
 			return c.Redirect(303, "/bookmarks")
-		}, apis.ActivityLogger(app), api.RequireAuth(app))
+		}, apis.ActivityLogger(app), middlewares.RequireAuth(app))
 
-		// -- BOOKMARKS PAGE --
-		e.Router.GET("/bookmarks", func(c echo.Context) error {
-			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-			q := c.QueryParam("q")
-			bookmarks, err := app.Dao().FindRecordsByFilter("bookmarks", "user.id = {:user_id}", "-created", -1, 0, dbx.Params{"user_id": record.Id})
+		e.Router.GET("/*",
+			handlers.NotFoundViewHandler(registry, app),
+			apis.ActivityLogger(app),
+			middlewares.RequireAuth(app))
 
-			if err != nil {
-				println(err.Error())
-			}
+		e.Router.GET("/bookmarks",
+			handlers.BookmarksViewHandler(registry, app),
+			apis.ActivityLogger(app),
+			middlewares.RequireAuth(app))
 
-			matchingBookmarks := []*models.Record{}
+		e.Router.POST("/bookmarks",
+			handlers.BookmarksPostHandler(app),
+			apis.ActivityLogger(app),
+			middlewares.RequireAuth(app))
 
-			if len(q) > 0 {
-				for _, bookmark := range bookmarks {
-					bm := bookmark.PublicExport()
-					fields := []string{"url", "name", "description"}
-					for _, field := range fields {
-						if strings.Contains(bm[field].(string), q) {
-							matchingBookmarks = append(matchingBookmarks, bookmark)
-						}
-					}
-				}
-			} else {
-				matchingBookmarks = bookmarks
-			}
+		e.Router.GET("/tags",
+			handlers.TagsViewHandler(registry, app),
+			apis.ActivityLogger(app),
+			middlewares.RequireAuth(app))
 
-			html, err := registry.LoadFiles(
-				"views/layout.html",
-				"views/navbar.html",
-				"views/bookmarks.html",
-				"views/bookmark.html",
-			).Render(map[string]any{
-				"username":      record.Username(),
-				"authenticated": true,
-				"bookmarks":     matchingBookmarks,
-				"query":         q,
-			})
+		e.Router.GET("/login",
+			handlers.LoginViewHandler(registry, app),
+			apis.ActivityLogger(app),
+			middlewares.LoadAuthContextFromCookie(app))
 
-			if err != nil {
-				println(err.Error())
-				return apis.NewNotFoundError("", err)
-			}
+		e.Router.POST("/login",
+			handlers.LoginPostHandler(app),
+			apis.ActivityLogger(app))
 
-			return c.HTML(200, html)
-		}, apis.ActivityLogger(app), api.RequireAuth(app))
-
-		// -- BOOKMARKS UPSERT HANDLER --
-		e.Router.POST("/bookmarks", func(c echo.Context) error {
-			userRecord, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-			data := &struct {
-				Id          string `form:"id" json:"id"`
-				Url         string `form:"url" json:"url"`
-				Name        string `form:"name" json:"name"`
-				Description string `form:"description" json:"description"`
-			}{}
-
-			contentType := c.Request().Header.Get("Content-Type")
-
-			// read the request data
-			if err := c.Bind(data); err != nil {
-				if strings.EqualFold(contentType, "Application/json") {
-					return apis.NewBadRequestError("Failed to read request data", err)
-				}
-				return c.Redirect(303, "/bookmarks?error=1")
-			}
-
-			var record *models.Record
-			var err error
-
-			if len(data.Id) > 0 {
-				// Update existing record
-				record, err = app.Dao().FindRecordById("bookmarks", data.Id)
-				if err != nil {
-					app.Logger().Error(err.Error())
-					if strings.EqualFold(contentType, "Application/json") {
-						return apis.NewNotFoundError("Bookmark not found", nil)
-					}
-					return c.Redirect(303, "/bookmarks?error=1")
-				}
-			} else {
-				// Create new record
-				collection, err := app.Dao().FindCollectionByNameOrId("bookmarks")
-				if err != nil {
-					app.Logger().Error(err.Error())
-					if strings.EqualFold(contentType, "Application/json") {
-						return apis.NewApiError(500, "Failed to access bookmarks collection", nil)
-					}
-					return c.Redirect(303, "/bookmarks?error=1")
-				}
-				record = models.NewRecord(collection)
-				record.IsNew()
-				record.Set("user", userRecord.Id)
-			}
-
-			record.Set("url", data.Url)
-			record.Set("name", data.Name)
-			record.Set("description", data.Description)
-
-			err = app.Dao().Save(record)
-
-			if err != nil {
-				app.Logger().Error(err.Error())
-				if strings.EqualFold(contentType, "Application/json") {
-					return apis.NewApiError(500, "Operation failed", nil)
-				}
-				return c.Redirect(303, "/bookmarks?error=1")
-			}
-
-			return c.Redirect(303, "/bookmarks?error=0")
-		}, apis.ActivityLogger(app), api.RequireAuth(app))
-
-		// -- TAGS PAGE --
-		e.Router.GET("/tags", func(c echo.Context) error {
-			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-
-			html, err := registry.LoadFiles(
-				"views/layout.html",
-				"views/navbar.html",
-				"views/main.html",
-			).Render(map[string]any{
-				"username":      record.Username(),
-				"authenticated": true,
-			})
-
-			if err != nil {
-				return apis.NewNotFoundError("", err)
-			}
-
-			return c.HTML(200, html)
-		}, apis.ActivityLogger(app), api.RequireAuth(app))
-
-		// -- LOGIN PAGE --
-		e.Router.GET("/login", func(c echo.Context) error {
-			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-			if record != nil {
-				return c.Redirect(303, "/")
-			}
-
-			html, err := registry.LoadFiles(
-				"views/layout.html",
-				"views/login.html",
-			).Render(map[string]any{
-				"error": c.QueryParam("error"),
-			})
-
-			if err != nil {
-				return apis.NewNotFoundError("", err)
-			}
-
-			if c.QueryParam("error") != "" {
-				return c.HTML(400, html)
-			}
-
-			return c.HTML(200, html)
-		}, apis.ActivityLogger(app), api.LoadAuthContextFromCookie(app))
-
-		// -- LOGIN POST HANDLER --
-		e.Router.POST("/login", func(c echo.Context) error {
-			data := &struct {
-				Email    string `form:"email" json:"email"`
-				Password string `form:"password" json:"password"`
-			}{}
-
-			contentType := c.Request().Header.Get("Content-Type")
-
-			// read the request data
-			if err := c.Bind(data); err != nil {
-				if strings.EqualFold(contentType, "Application/json") {
-					return apis.NewBadRequestError("Failed to read request data", err)
-				}
-				return c.Redirect(303, "/login?error=1")
-			}
-
-			// fetch the user and check the provided password
-			record, err := app.Dao().FindAuthRecordByEmail("users", data.Email)
-			if err != nil || !record.ValidatePassword(data.Password) {
-				if strings.EqualFold(contentType, "Application/json") {
-					return apis.NewBadRequestError("Invalid login credentials", err)
-				}
-				return c.Redirect(303, "/login?error=1")
-			}
-
-			// generate a new auth token for the found user record
-			token, err := tokens.NewRecordAuthToken(app, record)
-			if err != nil {
-				if strings.EqualFold(contentType, "Application/json") {
-					return apis.NewBadRequestError("Failed to create auth token", err)
-				}
-				return c.Redirect(303, "/login?error=1")
-			}
-
-			// set it as cookie
-			cookie := &http.Cookie{
-				Name:     "pb_auth", // rename with the name of your cookie
-				Value:    token,
-				Secure:   true,
-				HttpOnly: true,
-				SameSite: http.SameSiteStrictMode,
-				// you can use the token duration or any other expiration (eg. only 1 day)
-				Expires: time.Now().Add(time.Duration(app.Settings().RecordAuthToken.Duration) * time.Second),
-			}
-
-			c.SetCookie(cookie)
-
-			if strings.EqualFold(contentType, "Application/json") {
-				return c.NoContent(http.StatusNoContent)
-			}
-			return c.Redirect(303, "/")
-		}, apis.ActivityLogger(app))
-
-		// -- LOGOUT HANDLER --
-		e.Router.POST("/logout", func(c echo.Context) error {
-			// Clear auth cookie
-			c.SetCookie(&http.Cookie{
-				Name:     "pb_auth",
-				Value:    "",
-				Secure:   true,
-				HttpOnly: true,
-				SameSite: http.SameSiteStrictMode,
-				MaxAge:   -1,
-				Expires:  time.Unix(0, 0),
-			})
-
-			return c.Redirect(303, "/login")
-		}, apis.ActivityLogger(app))
+		e.Router.POST("/logout",
+			handlers.LogoutPostHandler(app),
+			apis.ActivityLogger(app))
 
 		return nil
 	})
