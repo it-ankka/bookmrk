@@ -15,7 +15,7 @@ func init() {
 			{
 				"id": "r46wuuwnllboa9m",
 				"created": "2024-11-20 18:08:07.175Z",
-				"updated": "2024-11-23 20:53:19.718Z",
+				"updated": "2024-11-29 08:47:56.788Z",
 				"name": "bookmarks",
 				"type": "base",
 				"system": false,
@@ -95,7 +95,7 @@ func init() {
 					}
 				],
 				"indexes": [
-					"CREATE UNIQUE INDEX ` + "`" + `idx_9xlgK9L` + "`" + ` ON ` + "`" + `bookmarks` + "`" + ` (` + "`" + `url` + "`" + `)"
+					"CREATE UNIQUE INDEX ` + "`" + `idx_9xlgK9L` + "`" + ` ON ` + "`" + `bookmarks` + "`" + ` (\n  ` + "`" + `url` + "`" + `,\n  ` + "`" + `user` + "`" + `\n)"
 				],
 				"listRule": "@request.auth.id != \"\" && user = @request.auth.id ",
 				"viewRule": "@request.auth.id != \"\" && user = @request.auth.id ",
@@ -107,7 +107,7 @@ func init() {
 			{
 				"id": "c0x0ngay68c3wjc",
 				"created": "2024-11-20 18:10:31.210Z",
-				"updated": "2024-11-20 18:37:43.175Z",
+				"updated": "2024-11-29 08:48:45.713Z",
 				"name": "tags",
 				"type": "base",
 				"system": false,
@@ -174,7 +174,7 @@ func init() {
 					}
 				],
 				"indexes": [
-					"CREATE UNIQUE INDEX ` + "`" + `idx_r7giYgS` + "`" + ` ON ` + "`" + `tags` + "`" + ` (` + "`" + `name` + "`" + `)"
+					"CREATE UNIQUE INDEX ` + "`" + `idx_r7giYgS` + "`" + ` ON ` + "`" + `tags` + "`" + ` (\n  ` + "`" + `name` + "`" + `,\n  ` + "`" + `user` + "`" + `\n)"
 				],
 				"listRule": "@request.auth.id != \"\" && user = @request.auth.id ",
 				"viewRule": "@request.auth.id != \"\" && user = @request.auth.id ",
@@ -185,8 +185,8 @@ func init() {
 			},
 			{
 				"id": "_pb_users_auth_",
-				"created": "2024-11-23 20:52:12.486Z",
-				"updated": "2024-11-23 20:52:12.492Z",
+				"created": "2024-11-23 21:01:18.582Z",
+				"updated": "2024-11-23 21:01:18.586Z",
 				"name": "users",
 				"type": "auth",
 				"system": false,
