@@ -4,7 +4,7 @@
 
 @layer components {
   .btn-secondary {
-    @apply rounded-xl border px-4 py-2 text-center transition hover:bg-gray-300 active:bg-gray-500;
+    @apply rounded-xl border bg-white px-4 py-2 text-center shadow-sm transition hover:bg-gray-300 active:bg-gray-500;
   }
   .btn-primary {
     @apply rounded-xl border bg-gray-500 px-4 py-2 text-center text-white transition hover:bg-gray-400 active:bg-white active:text-black;

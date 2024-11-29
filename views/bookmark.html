@@ -1,17 +1,28 @@
 {{ define "bookmark" }}
-  <a
-    class="flex min-h-28 flex-col gap-2 rounded-xl p-4 shadow transition hover:bg-gray-300 active:bg-gray-500 sm:aspect-video"
+  <div
+    class="relative flex min-h-28 flex-col gap-2 rounded-xl bg-white p-4 shadow transition sm:aspect-video"
     href="{{ .url }}"
   >
-    <div
-      class="overflow-hidden overflow-ellipsis text-xl font-semibold underline"
-    >
-      {{ if .name }}
-        {{ .name }}
-      {{ else }}
-        {{ .url }}
-      {{ end }}
+    <!-- TODO -->
+    <div class="flex justify-between">
+      <a
+        class="w-max overflow-hidden overflow-ellipsis pt-2 text-xl font-semibold underline transition active:text-gray-500"
+        href="{{ .url }}"
+      >
+        {{ if .name }}
+          {{ .name }}
+        {{ else }}
+          {{ .url }}
+        {{ end }}
+      </a>
+      <button
+        class="btn-secondary"
+        onmouseover="event.stopPropagation()"
+        onclick="openEditModal({{ .id }}, {{ .url }}, {{ .name }}, {{ .description }} )"
+      >
+        edit
+      </button>
     </div>
     <div class="overflow-ellipsis text-gray-700">{{ .description }}</div>
-  </a>
+  </div>
 {{ end }}

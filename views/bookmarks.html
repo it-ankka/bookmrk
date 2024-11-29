@@ -1,5 +1,23 @@
 {{ define "title" }}Bookmarks{{ end }}
 {{ define "body" }}
+  <script>
+    function openCreateModal() {
+      document.getElementById("modal-form").method = "POST";
+      document.getElementById("form-title").innerHtml = "Create a new bookmark";
+      document
+        .querySelectorAll(".modal-input")
+        .forEach((input) => (input.value = ""));
+      document.getElementById("create-dialog").showModal();
+    }
+    function openEditModal(id, url, name, description) {
+      document.getElementById("form-title").innerHtml = "Edit bookmark";
+      document.getElementById("id-input").value = id;
+      document.getElementById("name-input").value = name;
+      document.getElementById("url-input").value = url;
+      document.getElementById("description-input").value = description;
+      document.getElementById("create-dialog").showModal();
+    }
+  </script>
   <div class="m-auto flex h-full max-w-4xl flex-col p-4">
     <div class="flex flex-col gap-4 py-4">
       <div class="flex w-full flex-col justify-between gap-2 md:flex-row">
@@ -15,8 +33,8 @@
         </form>
       </div>
       <button
-        class="w-full rounded-xl border p-4 text-center transition hover:bg-gray-300 active:bg-gray-500 md:w-fit"
-        onclick="document.getElementById('create-dialog').showModal()"
+        class="btn-secondary w-full p-4 md:w-fit"
+        onclick="openCreateModal()"
       >
         New bookmark
       </button>
@@ -25,39 +43,44 @@
         class="w-full max-w-md rounded-xl p-4 shadow"
         onmousedown="event.target==this && this.close()"
       >
-        <form method="POST" class="flex flex-col items-stretch gap-6">
-          <div class="text-2xl">Create a new bookmark</div>
+        <form
+          method="POST"
+          id="modal-form"
+          class="flex flex-col items-stretch gap-6"
+        >
+          <div id="form-title" class="text-2xl">Create a new bookmark</div>
           <div class="flex flex-col items-stretch gap-4">
+            <input name="id" id="id-input" class="modal-input hidden" />
             <input
+              id="url-input"
               type="url"
               name="url"
               placeholder="Url"
-              class="border-b p-2"
+              class="modal-input border-b p-2"
             />
             <input
+              id="name-input"
               type="text"
               name="name"
               placeholder="name"
-              class="border-b p-2"
+              class="modal-input border-b p-2"
             />
             <textarea
+              id="description-input"
               placeholder="description"
               name="description"
               rows="3"
-              class="border-b p-2"
+              class="modal-input border-b p-2"
             ></textarea>
           </div>
           <div class="flex justify-end gap-2">
             <button formmethod="dialog" class="btn-secondary w-full p-4">
               Cancel
             </button>
-            <button type="submit" class="btn-primary w-full p-4">Create</button>
+            <button type="submit" class="btn-primary w-full p-4">Save</button>
           </div>
         </form>
       </dialog>
-      <script>
-        document.getElementById("create-dialog").showModal();
-      </script>
     </div>
     {{ if .bookmarks }}
       <div

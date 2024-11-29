@@ -111,6 +111,71 @@ func main() {
 			return c.HTML(200, html)
 		}, apis.ActivityLogger(app), api.RequireAuth(app))
 
+		// -- BOOKMARKS UPSERT HANDLER --
+		e.Router.POST("/bookmarks", func(c echo.Context) error {
+			userRecord, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+			data := &struct {
+				Id          string `form:"id" json:"id"`
+				Url         string `form:"url" json:"url"`
+				Name        string `form:"name" json:"name"`
+				Description string `form:"description" json:"description"`
+			}{}
+
+			contentType := c.Request().Header.Get("Content-Type")
+
+			// read the request data
+			if err := c.Bind(data); err != nil {
+				if strings.EqualFold(contentType, "Application/json") {
+					return apis.NewBadRequestError("Failed to read request data", err)
+				}
+				return c.Redirect(303, "/bookmarks?error=1")
+			}
+
+			var record *models.Record
+			var err error
+
+			if len(data.Id) > 0 {
+				// Update existing record
+				record, err = app.Dao().FindRecordById("bookmarks", data.Id)
+				if err != nil {
+					app.Logger().Error(err.Error())
+					if strings.EqualFold(contentType, "Application/json") {
+						return apis.NewNotFoundError("Bookmark not found", nil)
+					}
+					return c.Redirect(303, "/bookmarks?error=1")
+				}
+			} else {
+				// Create new record
+				collection, err := app.Dao().FindCollectionByNameOrId("bookmarks")
+				if err != nil {
+					app.Logger().Error(err.Error())
+					if strings.EqualFold(contentType, "Application/json") {
+						return apis.NewApiError(500, "Failed to access bookmarks collection", nil)
+					}
+					return c.Redirect(303, "/bookmarks?error=1")
+				}
+				record = models.NewRecord(collection)
+				record.IsNew()
+				record.Set("user", userRecord.Id)
+			}
+
+			record.Set("url", data.Url)
+			record.Set("name", data.Name)
+			record.Set("description", data.Description)
+
+			err = app.Dao().Save(record)
+
+			if err != nil {
+				app.Logger().Error(err.Error())
+				if strings.EqualFold(contentType, "Application/json") {
+					return apis.NewApiError(500, "Operation failed", nil)
+				}
+				return c.Redirect(303, "/bookmarks?error=1")
+			}
+
+			return c.Redirect(303, "/bookmarks?error=0")
+		}, apis.ActivityLogger(app), api.RequireAuth(app))
+
 		// -- TAGS PAGE --
 		e.Router.GET("/tags", func(c echo.Context) error {
 			record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
@@ -156,7 +221,7 @@ func main() {
 			return c.HTML(200, html)
 		}, apis.ActivityLogger(app), api.LoadAuthContextFromCookie(app))
 
-		// -- LOGIN HANDLER --
+		// -- LOGIN POST HANDLER --
 		e.Router.POST("/login", func(c echo.Context) error {
 			data := &struct {
 				Email    string `form:"email" json:"email"`
