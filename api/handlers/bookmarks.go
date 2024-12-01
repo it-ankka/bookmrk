@@ -42,6 +42,7 @@ func BookmarksViewHandler(registry *template.Registry, app *pocketbase.PocketBas
 			"views/navbar.html",
 			"views/bookmarks.html",
 			"views/bookmark.html",
+			"views/bookmark_dialog.html",
 		).Render(map[string]any{
 			"username":      record.Username(),
 			"authenticated": true,

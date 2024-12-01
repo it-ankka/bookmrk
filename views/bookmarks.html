@@ -17,70 +17,115 @@
       document.getElementById("description-input").value = description;
       document.getElementById("create-dialog").showModal();
     }
+    function updateOptions() {
+      document.getElementById("options-form").submit();
+    }
   </script>
   <div class="m-auto flex h-full max-w-4xl flex-col p-4">
     <div class="flex flex-col gap-4 py-4">
+      <form id="options-form" method="GET"></form>
       <div class="flex w-full flex-col justify-between gap-2 md:flex-row">
         <div class="w-full text-2xl">Bookmarks</div>
-        <form method="GET" class="flex gap-2">
+        <div class="flex gap-2">
           <input
             name="q"
+            form="options-form"
             class="flex-1 border-b p-2"
             placeholder="Search"
             value="{{ .query }}"
           />
-          <button type="submit" class="btn-secondary">Search</button>
-        </form>
+          <button type="submit" form="options-form" class="btn-secondary">
+            Search
+          </button>
+        </div>
       </div>
-      <button
-        class="btn-secondary w-full p-4 md:w-fit"
-        onclick="openCreateModal()"
-      >
-        New bookmark
-      </button>
-      <dialog
-        id="create-dialog"
-        class="w-full max-w-md rounded-xl p-4 shadow"
-        onmousedown="event.target==this && this.close()"
-      >
-        <form
-          method="POST"
-          id="modal-form"
-          class="flex flex-col items-stretch gap-6"
-        >
-          <div id="form-title" class="text-2xl">Create a new bookmark</div>
-          <div class="flex flex-col items-stretch gap-4">
-            <input name="id" id="id-input" class="modal-input hidden" />
-            <input
-              id="url-input"
-              type="url"
-              name="url"
-              placeholder="Url"
-              class="modal-input border-b p-2"
-            />
-            <input
-              id="name-input"
-              type="text"
-              name="name"
-              placeholder="name"
-              class="modal-input border-b p-2"
-            />
-            <textarea
-              id="description-input"
-              placeholder="description"
-              name="description"
-              rows="3"
-              class="modal-input border-b p-2"
-            ></textarea>
+      <div class="flex justify-between">
+        <div>
+          <button
+            class="btn-secondary w-full p-4 md:w-fit"
+            onclick="openCreateModal()"
+          >
+            New bookmark
+          </button>
+          {{ block "bookmark-dialog" . }}{{ end }}
+        </div>
+        <div class="flex gap-4">
+          <div class="flex items-baseline gap-2">
+            <!-- <label for="sort-by:" class="h-fit">Sort by:</label> -->
+            <select
+              name="sort-by"
+              form="options-form"
+              onchange="updateOptions()"
+              class="h-full cursor-pointer rounded-xl border bg-white p-4"
+            >
+              <option value="name">Name</option>
+              <option value="url">Url</option>
+              <option value="created">Created</option>
+              <option value="updated">Updated</option>
+            </select>
           </div>
-          <div class="flex justify-end gap-2">
-            <button formmethod="dialog" class="btn-secondary w-full p-4">
-              Cancel
-            </button>
-            <button type="submit" class="btn-primary w-full p-4">Save</button>
+          <div>
+            <div class="flex h-full items-stretch">
+              <!-- TODO MAKE THESE RADIO BUTTONS WORK -->
+              <input
+                type="radio"
+                id="ascending"
+                form="options-form"
+                onchange="updateOptions()"
+                name="sort-dir"
+                class="hidden"
+              />
+              <label
+                for="ascending"
+                class="btn-secondary cursor-pointer content-center rounded-r-none"
+                >Ascending</label
+              >
+              <input
+                type="radio"
+                id="descending"
+                form="options-form"
+                onchange="updateOptions()"
+                name="sort-dir"
+                class="hidden"
+              />
+              <label
+                for="descending"
+                class="btn-secondary content-center rounded-l-none"
+                >Descending</label
+              >
+            </div>
           </div>
-        </form>
-      </dialog>
+          <div class="flex h-full items-stretch">
+            <input
+              type="radio"
+              id="grid"
+              form="options-form"
+              onchange="updateOptions()"
+              name="view"
+              class="hidden"
+              checked
+            />
+            <label
+              for="grid"
+              class="btn-secondary cursor-pointer content-center rounded-r-none"
+              >Grid</label
+            >
+            <input
+              type="radio"
+              form="options-form"
+              onchange="updateOptions()"
+              id="rows"
+              name="view"
+              class="hidden"
+            />
+            <label
+              for="rows"
+              class="btn-secondary content-center rounded-l-none"
+              >Rows</label
+            >
+          </div>
+        </div>
+      </div>
     </div>
     {{ if .bookmarks }}
       <div
