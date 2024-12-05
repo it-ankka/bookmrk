@@ -1,4 +1,5 @@
 {{ define "title" }}Bookmarks{{ end }}
+
 {{ define "body" }}
   <script>
     function openCreateModal() {
@@ -51,78 +52,110 @@
         </div>
         <div class="flex gap-4">
           <div class="flex items-baseline gap-2">
-            <!-- <label for="sort-by:" class="h-fit">Sort by:</label> -->
+            <label for="sort-by:" class="h-fit">Sort by:</label>
             <select
               name="sort-by"
               form="options-form"
+              autocomplete="off"
               onchange="updateOptions()"
               class="h-full cursor-pointer rounded-xl border bg-white p-4"
             >
-              <option value="name">Name</option>
-              <option value="url">Url</option>
-              <option value="created">Created</option>
-              <option value="updated">Updated</option>
+              <option
+                value="name"
+                {{ if eq .sortBy "name" }}selected="true"{{ end }}
+              >
+                Name
+              </option>
+              <option
+                value="url"
+                {{ if eq .sortBy "url" }}selected="true"{{ end }}
+              >
+                Url
+              </option>
+              <option
+                value="created"
+                {{ if eq .sortBy "created" }}selected="true"{{ end }}
+              >
+                Created
+              </option>
+              <option
+                value="updated"
+                {{ if eq .sortBy "updated" }}selected="true"{{ end }}
+              >
+                Updated
+              </option>
             </select>
           </div>
           <div>
             <div class="flex h-full items-stretch">
               <!-- TODO MAKE THESE RADIO BUTTONS WORK -->
-              <input
-                type="radio"
-                id="ascending"
-                form="options-form"
-                onchange="updateOptions()"
-                name="sort-dir"
-                class="hidden"
-              />
               <label
                 for="ascending"
-                class="btn-secondary cursor-pointer content-center rounded-r-none"
-                >Ascending</label
+                class="btn-secondary cursor-pointer content-center rounded-r-none has-[:checked]:cursor-default has-[:checked]:bg-gray-300"
               >
-              <input
-                type="radio"
-                id="descending"
-                form="options-form"
-                onchange="updateOptions()"
-                name="sort-dir"
-                class="hidden"
-              />
+                <input
+                  type="radio"
+                  id="ascending"
+                  value="ASC"
+                  form="options-form"
+                  onchange="updateOptions()"
+                  name="sort-dir"
+                  class="hidden"
+                  {{ if eq .sortDir "ASC" }}checked{{ end }}
+                />
+                Ascending
+              </label>
               <label
                 for="descending"
-                class="btn-secondary content-center rounded-l-none"
-                >Descending</label
+                class="btn-secondary content-center rounded-l-none has-[:checked]:cursor-default has-[:checked]:bg-gray-300"
               >
+                <input
+                  type="radio"
+                  id="descending"
+                  value="DESC"
+                  form="options-form"
+                  onchange="updateOptions()"
+                  name="sort-dir"
+                  class="hidden"
+                  {{ if eq .sortDir "DESC" }}checked{{ end }}
+                />
+                Descending
+              </label>
             </div>
           </div>
           <div class="flex h-full items-stretch">
-            <input
-              type="radio"
-              id="grid"
-              form="options-form"
-              onchange="updateOptions()"
-              name="view"
-              class="hidden"
-              checked
-            />
             <label
               for="grid"
-              class="btn-secondary cursor-pointer content-center rounded-r-none"
-              >Grid</label
+              class="btn-secondary cursor-pointer content-center rounded-r-none has-[:checked]:cursor-default has-[:checked]:bg-gray-300"
             >
-            <input
-              type="radio"
-              form="options-form"
-              onchange="updateOptions()"
-              id="rows"
-              name="view"
-              class="hidden"
-            />
+              <input
+                type="radio"
+                id="grid"
+                value="grid"
+                form="options-form"
+                onchange="updateOptions()"
+                name="view"
+                class="hidden"
+                {{ if eq .viewMode "grid" }}checked{{ end }}
+              />
+              Grid
+            </label>
             <label
               for="rows"
-              class="btn-secondary content-center rounded-l-none"
-              >Rows</label
+              class="btn-secondary content-center rounded-l-none has-[:checked]:cursor-default has-[:checked]:bg-gray-300"
             >
+              <input
+                type="radio"
+                form="options-form"
+                value="rows"
+                onchange="updateOptions()"
+                id="rows"
+                name="view"
+                class="hidden"
+                {{ if eq .viewMode "rows" }}checked{{ end }}
+              />
+              Rows
+            </label>
           </div>
         </div>
       </div>

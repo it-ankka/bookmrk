@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/labstack/echo/v5"
@@ -15,6 +16,10 @@ func BookmarksViewHandler(registry *template.Registry, app *pocketbase.PocketBas
 	return func(c echo.Context) error {
 		record, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 		q := c.QueryParam("q")
+		sortBy := c.QueryParam("sort-by")
+		sortDir := c.QueryParam("sort-dir")
+		viewMode := c.QueryParam("view")
+		// TODO ADD SORTING LOGIC HERE
 		bookmarks, err := app.Dao().FindRecordsByFilter("bookmarks", "user.id = {:user_id}", "-created", -1, 0, dbx.Params{"user_id": record.Id})
 
 		if err != nil {
@@ -47,6 +52,9 @@ func BookmarksViewHandler(registry *template.Registry, app *pocketbase.PocketBas
 			"username":      record.Username(),
 			"authenticated": true,
 			"bookmarks":     matchingBookmarks,
+			"sortBy":        sortBy,
+			"sortDir":       sortDir,
+			"viewMode":      viewMode,
 			"query":         q,
 		})
 
